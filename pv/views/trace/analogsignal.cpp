@@ -33,6 +33,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QString>
+#include <QRegularExpression>
 
 #include "analogsignal.hpp"
 #include "logicsignal.hpp"
@@ -1111,7 +1112,7 @@ void AnalogSignal::on_conv_threshold_changed(int index)
 
 		QStringList tokens = regex.match(text).capturedTexts();
 #else
-		QRegExp regex(re1 + re2);
+		QRegularExpression regex(re1 + re2);
 		if (!regex.exactMatch(text))
 			return;  // String doesn't match the regex
 
@@ -1146,7 +1147,7 @@ void AnalogSignal::on_conv_threshold_changed(int index)
 
 		QStringList tokens = regex.match(text).capturedTexts();
 #else
-		QRegExp regex(re1 + re2 + re3 + re4 + re5);
+		QRegularExpression regex(re1 + re2 + re3 + re4 + re5);
 
 		if (!regex.exactMatch(text))
 			return;  // String doesn't match the regex
