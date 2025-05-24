@@ -23,7 +23,7 @@
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QRegularExpression>
 #else
-#include <QRegExp>
+#include <QRegularExpression>
 #endif
 
 namespace pv {
@@ -108,7 +108,7 @@ void TimestampSpinBox::on_editingFinished()
 		captures = re.match(text()).capturedTexts();
 	}
 #else
-	QRegExp re(re_pattern);
+	QRegularExpression re(re_pattern);
 	has_match = re.exactMatch(text());
 	if (has_match) {
 		captures = re.capturedTexts();
