@@ -187,7 +187,7 @@ public:
 	void stop_capture();
 
 	double get_samplerate() const;
-	Glib::DateTime get_acquisition_start_time() const;
+	Glib::TimeVal get_acquisition_start_time() const;
 
 	uint32_t get_highest_segment_id() const;
 	uint64_t get_segment_sample_count(uint32_t segment_id) const;
@@ -315,7 +315,7 @@ private:
 	bool frame_began_;
 
 	QElapsedTimer acq_time_;
-	Glib::DateTime acq_start_time_;
+	Glib::TimeVal acq_start_time_;
 
 	MetadataObjManager metadata_obj_manager_;
 
