@@ -18,15 +18,11 @@
  */
 
 #include "config.h"
-
 #include <cstring>
 #include <forward_list>
 #include <limits>
-
-#include <QDebug>
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QRegularExpression>
-#endif
+#include <QDebug>
 
 #include "logic.hpp"
 #include "logicsegment.hpp"
@@ -73,24 +69,21 @@ DecodeSignal::~DecodeSignal()
 	reset_decode(true);
 }
 
-void DecodeSignal::set_name(QString name)
-{
-	SignalBase::set_name(name);
-
-	update_output_signals();
-}
-
-void DecodeSignal::set_color(QColor color)
-{
-	SignalBase::set_color(color);
-
-	update_output_signals();
-}
-
 const vector< shared_ptr<Decoder> >& DecodeSignal::decoder_stack() const
 {
 	return stack_;
 }
+
+void DecodeSignal::set_name(QString name)
+{
+    name_ = std::move(name); // or just: name_ = name;
+}
+
+void DecodeSignal::set_color(QColor color)
+{
+    color_ = std::move(color); // or just: color_ = color;
+}
+
 
 void DecodeSignal::stack_decoder(const srd_decoder *decoder, bool restart_decode)
 {
@@ -309,11 +302,7 @@ void DecodeSignal::auto_assign_signals(const shared_ptr<Decoder> dec)
 			continue;
 
 		QString ch_name = ch.name.toLower();
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 		ch_name = ch_name.replace(QRegularExpression("[-_.]"), " ");
-#else
-		ch_name = ch_name.replace(QRegExp("[-_.]"), " ");
-#endif
 
 		shared_ptr<data::SignalBase> match;
 		for (const shared_ptr<data::SignalBase>& s : session_.signalbases()) {
@@ -321,11 +310,7 @@ void DecodeSignal::auto_assign_signals(const shared_ptr<Decoder> dec)
 				continue;
 
 			QString s_name = s->name().toLower();
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 			s_name = s_name.replace(QRegularExpression("[-_.]"), " ");
-#else
-			s_name = s_name.replace(QRegExp("[-_.]"), " ");
-#endif
 
 			if (s->logic_data() &&
 				((ch_name.contains(s_name)) || (s_name.contains(ch_name)))) {
@@ -758,11 +743,8 @@ void DecodeSignal::save_settings(QSettings &settings) const
 	for (const shared_ptr<Decoder>& decoder : stack_) {
 		settings.beginGroup("decoder" + QString::number(decoder_idx++));
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-		settings.setValue("id", (const char *)decoder->get_srd_decoder()->id);
-#else
-		settings.setValue("id", decoder->get_srd_decoder()->id);
-#endif
+		// settings.setValue("id", decoder->get_srd_decoder()->id);
+		settings.setValue("id", QString::fromUtf8(decoder->get_srd_decoder()->id));
 		settings.setValue("visible", decoder->visible());
 
 		// Save decoder options
@@ -824,8 +806,6 @@ void DecodeSignal::save_settings(QSettings &settings) const
 
 		settings.endGroup();
 	}
-
-	// TODO Save logic output signal settings
 }
 
 void DecodeSignal::restore_settings(QSettings &settings)
@@ -931,8 +911,6 @@ void DecodeSignal::restore_settings(QSettings &settings)
 	update_channel_list();
 	commit_decoder_channels();
 	update_output_signals();
-
-	// TODO Restore logic output signal settings
 
 	begin_decode();
 }
@@ -1390,14 +1368,13 @@ void DecodeSignal::decode_proc()
 
 			// If the input segment is complete, we've exhausted this segment
 			if (input_segment->is_complete()) {
-#if defined HAVE_SRD_SESSION_SEND_EOF && HAVE_SRD_SESSION_SEND_EOF
+				#if defined HAVE_SRD_SESSION_SEND_EOF && HAVE_SRD_SESSION_SEND_EOF
 				// Tell protocol decoders about the end of
 				// the input data, which may result in more
 				// annotations being emitted
 				(void)srd_session_send_eof(srd_session_);
 				new_annotations();
 #endif
-
 				if (current_segment_id_ < (logic_mux_data_->logic_segments().size() - 1)) {
 					// Process next segment
 					current_segment_id_++;
@@ -1456,6 +1433,7 @@ void DecodeSignal::start_srd_session()
 
 		// Metadata is cleared also, so re-set it
 		uint64_t samplerate = 0;
+
 		if (segments_.size() > 0)
 			samplerate = segments_.at(current_segment_id_).samplerate;
 		if (samplerate)
@@ -1467,8 +1445,6 @@ void DecodeSignal::start_srd_session()
 
 		return;
 	}
-
-	// Update the samplerates for the output logic channels
 	update_output_signals();
 
 	// Create the session
@@ -1522,7 +1498,7 @@ void DecodeSignal::terminate_srd_session()
 	// application no longer wants them to.
 	if (srd_session_) {
 #if defined HAVE_SRD_SESSION_SEND_EOF && HAVE_SRD_SESSION_SEND_EOF
-		(void)srd_session_send_eof(srd_session_);
+	(void)srd_session_send_eof(srd_session_);
 #endif
 		srd_session_terminate_reset(srd_session_);
 
