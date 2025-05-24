@@ -1,3 +1,13 @@
+Pulseview fork - May 24, 2025
+
+Changes have been made so that Pulseview compiles and runs on Apple Silicon.
+
+Successful compilation on MacOS 15.5 on M3 Pro
+
+Dependencies libsigrok and libsigrikdecode also needed to be modified slightly
+and installed prior to build. Versions installed via homebrew did not work.
+
+
 -------------------------------------------------------------------------------
 README
 -------------------------------------------------------------------------------
